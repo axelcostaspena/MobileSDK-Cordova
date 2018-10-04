@@ -3,6 +3,10 @@
 
 module.exports = function (ctx) {
 
+    console.log('Selligent Cordova before build:');
+    console.log('disabled app/build-extras.gradle copying, please add any needed build configurations through custom hooks');
+    return;
+
     console.log('**********************************');
     console.log('* Selligent Cordova before build *');
     console.log('**********************************');
