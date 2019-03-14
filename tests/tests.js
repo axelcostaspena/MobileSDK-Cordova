@@ -46,8 +46,7 @@ exports.defineAutoTests = function () {
         it('should contain "InAppMessageRefreshType" constants that are defined', function () {
             expect(window.Selligent.InAppMessageRefreshType).toBeDefined();
             expect(window.Selligent.InAppMessageRefreshType.NONE).toBe(10);
-            expect(window.Selligent.InAppMessageRefreshType.Android).toBeDefined();
-            expect(window.Selligent.InAppMessageRefreshType.Android.MINUTE).toBe(11);
+            expect(window.Selligent.InAppMessageRefreshType.MINUTE).toBe(11);
             expect(window.Selligent.InAppMessageRefreshType.HOUR).toBe(12);
             expect(window.Selligent.InAppMessageRefreshType.DAY).toBe(13);
         });
@@ -154,9 +153,9 @@ exports.defineAutoTests = function () {
                 expect(typeof response === 'string').toBeTruthy();
 
                 if (cordova.platformId === "android") {
-                    expect(response).toBe("1.7.0");
+                    expect(response).toBe("2.1.1");
                 } else if (cordova.platformId === "ios") {
-                    expect(response).toBe("1.7.3");
+                    expect(response).toBe("2.0.1");
                 }
 
                 done();

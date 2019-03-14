@@ -45,6 +45,35 @@ Execute the following command: `ionic cordova plugin add @selligent-marketing-cl
                android:name="com.selligent.SelligentApplication">
   ```
 
+#### Change default push notification icons
+
+Add the following properties to the `selligent.json` file:
+
+```
+    "notificationSmallIcon": "ic_notification",
+    "notificationLargeIcon": "ic_notification"
+```
+
+> _Note: only parse the name of the icon, without the path. The icon should reside in the res/drawable folder of the Android project, as explained in [Android's official guide](https://developer.android.com/guide/topics/resources/drawable-resource#BitmapFile)._
+
+#### Third party plugins
+
+The plugin has a cordova build hook for Android. The hook will rebuild the `ext.postBuildExtras` section of the  `build-extras.gradle` file. It will add various repositories and settings needed to build the plugin. You can customize this file yourself, but it's important to keep the `ext.postBuildExtras` section last.
+
+All dependency verions of this plugin are preferences that can be customized. The preferences are the following: `MULTIDEX_VERSION, APP_COMPAT_VERSION, FIREBASE_VERSION, FIREBASE_JOB_DISPATCHER_VERSION, PLAY_SERVICES_VERSION, PLOT_PROJECTS_VERSION, GSON_VERSION, METADATA_EXTRACTOR_VERSION`
+
+#### Upgrading the plugin to a new version
+
+Execute the following steps:
+
+- `$ cordova plugin rm selligent-cordova`
+- `$ cordova platform rm android`
+- `$ cordova plugin platform add android`
+- `$ cordova plugin add @selligent-marketing-cloud/selligent-cordova`
+- Follow the above installation steps again.
+
+If for some reason you can't remove and rebuild the Android platform it's important to remove any references to the sdk in the `project.properties` and `build.gradle` files.
+
 ## iOS Specific installation
 
 For remote push notifications, follow section 4 **Configure the APNS (Apple Push Notification Service)**, of the **IOS - Using the SDK** pdf.
@@ -147,6 +176,20 @@ For a detailed overview of the settings see [Selligent.reloadSettings(successCal
 
 6. Run the project and press the **Get Version** button, you should see a popup showing the currently installed Selligent SDK version.
 
+### Deeplinking
+You can catch the deeplinks 2 ways:
+
+1. Native in AppDelegate.m, add the following (example code that logs the URL)
+```
+-(BOOL)application:(UIApplication*) application openURL:(NSURL*) url sourceApplication:(NSString*) sourceApplication annotation:(id) annotation
+{
+  NSLog(@"%@", [url absoluteString]);
+  return YES;
+}
+```
+
+2. In your Cordova codebase, https://www.npmjs.com/package/cordova-plugin-deeplinks
+
 ## API Reference
 
 * [Methods](#methods)
@@ -194,6 +237,8 @@ For a detailed overview of the settings see [Selligent.reloadSettings(successCal
     * [getGCMToken Example](#getgcmtoken-example)
   * [Selligent.getRemoteMessagesDisplayType(successCallback, errorCallback)](#selligentgetremotemessagesdisplaytypesuccesscallback--errorcallback)
     * [getRemoteMessagesDisplayType Example](#getremotemessagesdisplaytype-example)
+  * [Selligent.setFirebaseToken(successCallback, errorCallback, token)](#selligentsetfirebasetokensuccesscallback--errorcallback--token)
+    * [setFirebaseToken Example](#setFirebaseToken-example)
 
 * [iOS Only/Specific Methods](#ios-only-specific-methods)
   * [Selligent.enableiOSLogging(successCallback, errorCallback, logLevels)](#selligentenableiosloggingsuccesscallback--errorcallback--loglevels)
@@ -266,6 +311,9 @@ The `settings` parameter is an object containing the web service URL, the Sellig
 | shouldClearBadge                            | boolean                                                                                       | No       | iOS Only     |
 | shouldDisplayRemoteNotification             | boolean                                                                                       | No       | iOS Only     |
 | shouldPerformBackgroundFetch                | boolean                                                                                       | No       | iOS Only     |
+| doNotListenToThePush                        | boolean                                                                                       | No       | Android Only     |
+| doNotFetchTheToken                          | boolean                                                                                       | No       | Android Only     |
+|  loadCacheAsynchronously                    | boolean                                                                                       | No       | Android Only     |
 | fullyQualifiedNotificationActivityClassName | string                                                                                        | No       | Android Only |
 | remoteMessageDisplayType                    | enum [Selligent.AndroidRemoteMessagesDisplayType](#selligentAndroidRemoteMessagesDisplayType) | No       | Android Only |
 
@@ -788,7 +836,7 @@ window.Selligent.areNotificationsEnabled(
 
 Set the small icon of a notification on Android.
 
-The method accepts an `iconName` parameter which is a string containing the name of the small icon.
+The method accepts an `iconName` parameter which is a string containing the name of the small icon. When the application is closed it will default back to the icons specified in `selligent.json`.
 > _Note: only parse the name of the icon, without the path. The icon should reside in the res/drawable folder of the Android project, as explained in [Android's official guide](https://developer.android.com/guide/topics/resources/drawable-resource#BitmapFile)._
 
 ##### setNotificationSmallIcon example
@@ -813,7 +861,7 @@ window.Selligent.setNotificationSmallIcon(
 
 Set the large icon of a notification on Android.
 
-The method accepts an `iconName` parameter which is a string containing the name of the large icon.
+The method accepts an `iconName` parameter which is a string containing the name of the large icon. When the application is closed it will default back to the icons specified in `selligent.json`.
 > _Note: only parse the name of the icon, without the path. The icon should reside in the res/drawable folder of the Android project, as explained in [Android's official guide](https://developer.android.com/guide/topics/resources/drawable-resource#BitmapFile)._
 
 ##### setNotificationLargeIcon example
@@ -873,6 +921,24 @@ window.Selligent.getRemoteMessagesDisplayType(
   function (error) { // error callback
     ...
   }
+);
+```
+
+#### Selligent.setFirebaseToken(successCallback, errorCallback, token)
+
+Set the firebase token manually.
+
+##### setFirebaseToken example
+
+```javascript
+window.Selligent.setFirebaseToken(
+    function (response) { // success callback
+      ...
+    },
+    function (error) { // error callback
+      ...
+    },
+    '123xyz'
 );
 ```
 
@@ -1044,12 +1110,12 @@ Defines the interval value to clear the cache.
 
 | Name        | Type   | Value | Description                                  |
 | ----------- | ------ | ----- | -------------------------------------------- |
-| AUTO        | number | 1     | Clear cache automatically (on startup?)      |
+| AUTO        | number | 1     | Clear cache automatically (on startup?)      |
 | NONE        | number | 2     | Don't clear cache                            |
-| Android.DAY | number | 3     | Clear cache daily, only available on Android |
-| WEEK        | number | 4     | Clear cache weekly                           |
-| MONTH       | number | 5     | Clear cache monthly                          |
-| QUARTER     | number | 6     | Clear cache quarterly                        |
+| Android.DAY | number | 3     | Clear cache daily, only available on Android |
+| WEEK        | number | 4     | Clear cache weekly                           |
+| MONTH       | number | 5     | Clear cache monthly                          |
+| QUARTER     | number | 6     | Clear cache quarterly                        |
 
 _Note: `ClearCacheIntervalValue.Android.DAY` is only used on Android and can not be used on iOS._
 
@@ -1141,8 +1207,8 @@ Defines the level of request for the authorisation of usage of location services
 
 | Name   | Type   | Value | Description                                               |
 | ------ | ------ | ----- | --------------------------------------------------------- |
-| IN_USE | number | 81    | Request authorisation when location services are in use   |
-| ALWAYS | number | 82    | Always request the authorisation of the location services |
+| IN_USE | number | 80    | Request authorisation when location services are in use   |
+| ALWAYS | number | 81    | Always request the authorisation of the location services |
 
 <div align="right">
     <b><a href="#api-reference">back to API ToC</a></b>
@@ -1154,11 +1220,11 @@ Defines the type of an event.
 
 | Name            | Type   | Value | Description       |
 | --------------- | ------ | ----- | ----------------- |
-| USER_REGISTER   | number | 91    | User registered   |
-| USER_UNREGISTER | number | 92    | User unregistered |
-| USER_LOGIN      | number | 93    | User logged in    |
-| USER_LOGOUT     | number | 94    | User logged out   |
-| CUSTOM          | number | 95    | Custom event      |
+| USER_REGISTER   | number | 90    | User registered   |
+| USER_UNREGISTER | number | 91    | User unregistered |
+| USER_LOGIN      | number | 92    | User logged in    |
+| USER_LOGOUT     | number | 93    | User logged out   |
+| CUSTOM          | number | 94    | Custom event      |
 
 <div align="right">
     <b><a href="#api-reference">back to API ToC</a></b>
